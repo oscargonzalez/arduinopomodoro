@@ -53,33 +53,43 @@ void setup()
   
   delay(1000);
   clearDisplayI2C();  // Clears display, resets cursor
-  startTime = millis();
+
+  sprintf(tempString, "%02d%02d", minutes, seconds);
+
+  // This will output the tempString to the S7S
+  s7sSendStringI2C(tempString);
+  
 }
 
 void loop()
 {
 
   if (digitalRead(BUTTON_PIN) == LOW)
-  {
-    delay(50);
-    if (pomodoroStarted == false) { pomodoroStarted = true; tone(BUZZER_PIN,1500, 50); }
+  {    
+    if (pomodoroStarted == false) { 
+      startTime = millis();
+      pomodoroStarted = true; tone(BUZZER_PIN,1500, 50); 
+    }
     else {pomodoroStarted = false;  }
+    delay(150); // ugly debounce
   }
 
-  if ( (millis()-startTime) > 1000)
+  if (pomodoroStarted == true)
   {
-    startTime = millis();
-    updateTimer();
-
-    // Magical sprintf creates a string for us to send to the s7s.
-    //  The %4d option creates a 4-digit integer.
-    sprintf(tempString, "%02d%02d", minutes, seconds);
+    if ( (millis()-startTime) > 1000)
+    {
+      startTime = millis();
+      updateTimer();
   
-    // This will output the tempString to the S7S
-    s7sSendStringI2C(tempString);
+      // Magical sprintf creates a string for us to send to the s7s.
+      //  The %4d option creates a 4-digit integer.
+      sprintf(tempString, "%02d%02d", minutes, seconds);
     
+      // This will output the tempString to the S7S
+      s7sSendStringI2C(tempString);
+      
+    }
   }
-  
 }
 
 // This custom function works somewhat like a serial.print.
