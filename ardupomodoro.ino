@@ -129,7 +129,7 @@ void updateTimer()
   }
 }
 
-void checkBat()
+float checkBat()
 {
   float measuredvbat = analogRead(VBATPIN);
   measuredvbat *= 2;    // we divided by 2, so multiply back
@@ -145,6 +145,7 @@ void checkBat()
     tone(BUZZER_PIN, 200, 50);delay(80);
     delay(500);    
   }
+  return measuredvbat;
 }
 
 void setup()
@@ -156,12 +157,13 @@ void setup()
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(BUZZER_PIN, OUTPUT);  
 
-  checkBat();
+  float vbat = checkBat();
   
   // Clear the display, and then turn on all segments and decimals
   clearDisplayI2C();  // Clears display, resets cursor
   setBrightnessI2C(255);  // High brightness
   setDecimalsI2C(0b00010000);  // Turn on all decimals, colon, apos
+
   sprintf(tempString, "%02d%02d", minutes, seconds);
   s7sSendStringI2C(tempString);
 
@@ -221,7 +223,7 @@ void loop()
       if (pomodoroStarted == true)
       {
         Serial.println("update");
-        if ( (millis()-startTime) > 100)
+        if ( (millis()-startTime) > 1000)
         {
 
           checkBat();
