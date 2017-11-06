@@ -7,6 +7,7 @@
 #define DISPLAY_ADDRESS 0x71
 #define BUTTON_PIN      10
 #define BUZZER_PIN      6
+#define VBATPIN         A9
 
 char tempString[10];  // Will be used with sprintf to create strings
 int minutes = 25;
@@ -128,13 +129,34 @@ void updateTimer()
   }
 }
 
-void setup()
+void checkBat()
 {
+  float measuredvbat = analogRead(VBATPIN);
+  measuredvbat *= 2;    // we divided by 2, so multiply back
+  measuredvbat *= 3.3;  // Multiply by 3.3V, our reference voltage
+  measuredvbat /= 1024; // convert to voltage
+  Serial.print("VBat: " ); Serial.println(measuredvbat);  
+
+  if (measuredvbat <= 3.7)
+  {
+    s7sSendStringI2C("LO  ");
+    tone(BUZZER_PIN, 200, 50);delay(80);
+    tone(BUZZER_PIN, 200, 50);delay(80);
+    tone(BUZZER_PIN, 200, 50);delay(80);
+    delay(500);    
+  }
+}
+
+void setup()
+{  
   Serial.begin(9600);
+  delay(3000);
   Serial.println("Setup");
   Wire.begin();  // Initialize hardware I2C pins
   pinMode(BUTTON_PIN, INPUT_PULLUP);
   pinMode(BUZZER_PIN, OUTPUT);  
+
+  checkBat();
   
   // Clear the display, and then turn on all segments and decimals
   clearDisplayI2C();  // Clears display, resets cursor
@@ -144,12 +166,6 @@ void setup()
   s7sSendStringI2C(tempString);
 
   setPomodoroPoint(1);
-  
-  s7sSendStringI2C("LO  ");
-  tone(BUZZER_PIN, 200, 50);delay(80);
-  tone(BUZZER_PIN, 200, 50);delay(80);
-  tone(BUZZER_PIN, 200, 50);delay(80);
-  delay(1000);  
   
 }
 
@@ -173,6 +189,7 @@ void updateDisplay()
   s7sSendStringI2C(tempString);
   setPomodoroPoint(pomodoroCount);            
 }
+
 void loop()
 {
   
@@ -204,8 +221,11 @@ void loop()
       if (pomodoroStarted == true)
       {
         Serial.println("update");
-        if ( (millis()-startTime) > 3)
+        if ( (millis()-startTime) > 100)
         {
+
+          checkBat();
+          
           startTime = millis();
           updateTimer();      
     
