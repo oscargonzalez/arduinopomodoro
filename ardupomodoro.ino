@@ -6,7 +6,7 @@
 
 #define DISPLAY_ADDRESS 0x71
 #define BUTTON_PIN      10
-#define BUZZER_PIN      9
+#define BUZZER_PIN      6
 
 char tempString[10];  // Will be used with sprintf to create strings
 int minutes = 25;
@@ -99,8 +99,7 @@ void updateTimer()
           tone(BUZZER_PIN, 1500, 200); delay(200);
           tone(BUZZER_PIN, 1800, 100); delay(100);
           tone(BUZZER_PIN, 2500, 300); delay(300);
-          tone(BUZZER_PIN, 2500, 300); delay(400);
-          tone(BUZZER_PIN, 2500, 300); delay(400);
+          tone(BUZZER_PIN, 2500, 500); delay(500);
 
           updateDisplay();
         }
@@ -145,6 +144,12 @@ void setup()
   s7sSendStringI2C(tempString);
 
   setPomodoroPoint(1);
+  
+  s7sSendStringI2C("LO  ");
+  tone(BUZZER_PIN, 200, 50);delay(80);
+  tone(BUZZER_PIN, 200, 50);delay(80);
+  tone(BUZZER_PIN, 200, 50);delay(80);
+  delay(1000);  
   
 }
 
